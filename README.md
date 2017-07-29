@@ -7,8 +7,8 @@ The build will be based on the following Docker components:
 - docker swarm
 
 The web2py environment will consist of 3 images:
-- web2py on Python v2.7.x
-- Apache web server v2.4.x
-- MySQL community edition v5.7.x
+1. web2py on Python v2.7.x
+1. Apache web server v2.4.x 
+1. MySQL community edition v5.7.x
 
 Initially, MySQL will be a single node only but Apache and MySQL can be scaled through multiple instances on multiple Docker nodes.
