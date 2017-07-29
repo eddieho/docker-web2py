@@ -17,6 +17,7 @@ Initially, MySQL will be a single node only but Apache and MySQL can be scaled t
 * A single docker compose has been created to run 3 containers of Apache v2.4.x, Python v2.7.x and MySQL v5.7.x
 * MySQL external data volume has not been created but MySQL config file has been externalised
 * Apache config and document directories have not been externalised
+* Apache does not have SSL support
 * web2py has not been installed but pymysql has been verified
 * All three containers can talk to each other. Python 2.7 can connect to MySQL through pymysql.
 * Swarm is outstanding
