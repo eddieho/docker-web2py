@@ -1,0 +1,28 @@
+version: '3'
+services:
+  web2py_apache:
+    build:
+      context: ./apache
+    image: web2py_apache
+    ports: 
+      - "80:80"
+    links:
+      - "web2py_python27:web2py_cluster"
+  web2py_python27:
+    build:
+      context: ./python27
+    image: web2py_python27
+    ports:
+      - "8080:80"
+    links:
+      - "web2py_mysql:mysql_host"
+  web2py_mysql:
+    build:
+      context: ./mysql
+    image: web2py_mysql
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql/mysql_cnf/mysql.conf.d:/etc/mysql/mysql.conf.d
+    environment:
+      MYSQL_ROOT_PASSWORD: Welcome1
