@@ -1,22 +1,25 @@
 version: '3'
 services:
-  web2py_apache:
+  apache2:
     build:
-      context: ./apache
-    image: web2py_apache
+      context: ./apache2
+    image: web2py_apache2
     ports: 
-      - "80:80"
+      - "80:8080"
+    volumes:
+      - ./apache2/conf:/usr/local/apache2/conf
+      - ./apache2/htdocs:/usr/local/apache2/htdocs
     links:
-      - "web2py_python27:web2py_cluster"
-  web2py_python27:
+      - "python27:web2py_cluster"
+  python27:
     build:
       context: ./python27
     image: web2py_python27
     ports:
       - "8080:80"
     links:
-      - "web2py_mysql:mysql_host"
-  web2py_mysql:
+      - "mysql:mysql_host"
+  mysql:
     build:
       context: ./mysql
     image: web2py_mysql
@@ -24,5 +27,9 @@ services:
       - "3306:3306"
     volumes:
       - ./mysql/mysql_cnf/mysql.conf.d:/etc/mysql/mysql.conf.d
+      - ./mysql/datadir:/var/lib/mysql
+      - ./mysql/init:/docker-entrypoint-initdb.d
     environment:
       MYSQL_ROOT_PASSWORD: Welcome1
+
+

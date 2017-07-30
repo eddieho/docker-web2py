@@ -10,7 +10,7 @@ ADD . /app
 # Install any needed OS packages
 # need to call 'apt-get update' first or it can't find package name
 #
-RUN apt-get update; apt-get install -y dnsutils net-tools vim mysql-client
+RUN apt-get update; apt-get install -y dnsutils net-tools vim zip mysql-client
 
 # Install any needed packages specified in requirements.txt
 RUN pip install -r pip_requirements.txt
