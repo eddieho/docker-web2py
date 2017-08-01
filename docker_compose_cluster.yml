@@ -1,0 +1,43 @@
+version: '3'
+services:
+  apache2:
+    image: ubuntu-docker01:5000/web2py_apache2
+    deploy:
+      replicas: 2
+      placement:
+        constraints:
+        - node.labels.web2py.tier.web==true
+    ports: 
+      - "80:8080"
+    volumes:
+      - ${APACHE2_CONF_DIR}:/usr/local/apache2/conf
+      - ${APACHE2_HTDOCS_DIR}:/usr/local/apache2/htdocs
+    links:
+      - "python27:web2py_cluster"
+  python27:
+    image: ubuntu-docker01:5000/web2py_python27
+    deploy:
+      replicas: 2
+      placement:
+        constraints:
+        - node.labels.web2py.tier.app==true
+    ports:
+      - "8080:80"
+    links:
+      - "mysql5:mysql5_host"
+  mysql5:
+    image: ubuntu-docker01:5000/web2py_mysql5
+    deploy:
+      placement:
+        constraints:
+        - node.labels.web2py.tier.db==true
+    ports:
+      - "3306:3306"
+    volumes:
+      - ${MYSQL_CONF_DIR}:/etc/mysql/mysql.conf.d
+      - ${MYSQL_DATA_DIR}:/var/lib/mysql
+      - ${MYSQL_INIT_DIR}:/docker-entrypoint-initdb.d
+    environment:
+      MYSQL_ROOT_PASSWORD: Welcome1
+
+
