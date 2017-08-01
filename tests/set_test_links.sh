@@ -18,6 +18,6 @@ mkdir -p $HOME/web2py/mysql5
 ln -s $MYDIR/../apache2/conf $HOME/web2py/apache2/conf
 ln -s $MYDIR/../apache2/htdocs $HOME/web2py/apache2/htdocs
 
-ln -s $MYDIR/../mysql5/mysql_conf $HOME/web2py/mysql5/mysql_conf
+ln -s $MYDIR/../mysql5/mysql_cnf $HOME/web2py/mysql5/mysql_cnf
 ln -s $MYDIR/../mysql5/init $HOME/web2py/mysql5/init
 mkdir -p $HOME/web2py/mysql5/datadir
