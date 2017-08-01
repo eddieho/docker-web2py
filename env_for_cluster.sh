@@ -12,6 +12,6 @@ export APACHE2_CONF_DIR=$HOME/web2py/apache2/conf
 export APACHE2_HTDOCS_DIR=$HOME/web2py/apache2/htdocs
 
 # web2py - MySQL 
-export MYSQL_CONF_DIR=$HOME/web2py/mysql5/mysql_cnf/mysql.conf.d
+export MYSQL_CONF_DIR=$HOME/web2py/mysql5/mysql_conf/mysql.conf.d
 export MYSQL_DATA_DIR=$HOME/web2py/mysql5/datadir
 export MYSQL_INIT_DIR=$HOME/web2py/mysql5/init
