@@ -3,7 +3,8 @@ services:
   apache2:
     image: ubuntu-docker01:5000/web2py_apache2
     deploy:
-      replicas: 2
+      replicas: 3
+# placeholder - future extension to constraint web tier, if needed
 #      placement:
 #        constraints:
 #        - node.labels.web2py.tier.web==true
@@ -15,7 +16,8 @@ services:
   python27:
     image: ubuntu-docker01:5000/web2py_python27
     deploy:
-      replicas: 2
+      replicas: 3
+# placeholder - future extension to contraint app tier, if needed
 #      placement:
 #        constraints:
 #        - node.labels.web2py.tier.app==true
