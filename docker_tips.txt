@@ -1,0 +1,25 @@
+
+1. registry
+
+1.1) start registry
+
+docker service create --name registry --publish 5000:5000 registry:2
+
+1.2) list all images in private registry
+curl -X GET http://ubuntu-docker01:5000/v2/_catalog
+
+> {"repositories":["web2py_apache2","web2py_mysql","web2py_python27"]}
+
+1.3) list all tags of an image
+curl -X GET http://ubuntu-docker01:5000/v2/web2py_mysql/tags/list
+
+> {"name":"web2py_mysql","tags":["latest"]}
+
+
+2. stack
+2.1) deploy a stack named "rstack"
+docker stack deploy --compose-file docker-compose.yml rstack
+
+2.2) tear down a stack "rstack"
+docker stack rm rstack
+
