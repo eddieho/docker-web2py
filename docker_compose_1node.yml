@@ -11,8 +11,6 @@ services:
     volumes:
       - ${APACHE2_CONF_DIR}:/usr/local/apache2/conf
       - ${APACHE2_HTDOCS_DIR}:/usr/local/apache2/htdocs
-    links:
-      - "python27:web2py_cluster"
   python27:
     build:
       context: ./python27
@@ -21,8 +19,6 @@ services:
       replicas: 2
     ports:
       - "8080:80"
-    links:
-      - "mysql5:mysql5_host"
   mysql5:
     build:
       context: ./mysql5
