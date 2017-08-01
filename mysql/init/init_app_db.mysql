@@ -1,4 +1,0 @@
-
-source ./create_app_db.mysql
-source ./create_app_users.mysql
-source ./create_app_tables.mysql
