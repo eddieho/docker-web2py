@@ -25,6 +25,7 @@ Initially, MySQL will be a single node only but Apache and MySQL can be scaled t
 * All three containers can talk to each other. 
 * Docker CE and Compose installation scripts have been verified in new Ubutun 16.x vm's. 
 * deployment to a single node warm works by using Docker Stack and a private registry https://docs.docker.com/engine/swarm/stack-deploy/#push-the-generated-image-to-the-registry. It's possible to use Docker hub for distribution of images but upload bandwidth is a big issue. Hence a private registry is deployed for testing. 
+* deployed to 3-node cluster successfully with support of constraining MySQL container to selected nodes using a node label web2py.tier.db=true
 
 **Next Steps**
-* deploy to a cluster of 3 swarm manager nodes with support of node labels. E.g. only some nodes can support MySQL.
+* update this README.cmd
