@@ -10,8 +10,20 @@ The project has been developed on an Ubuntu/Debian based Linux environment and h
 1. Docker Community Edition - v17.06.0
 1. Docker Compose - v1.15.0
 
+The rest of this README will cover how to deploy by various scripts and commands. Since the objective is to provide a framework rather than an actual project, the following items are not implemented here but leave it for actual projects to fill in the details:
+1. Apache
+* SSL configuration
+* module installation
+* log file collection
+1. Python 
+* web2py installation
+* application configuration 
+1. MySQL
+* backup/recovery
+* network directory to support persistent data
+
 **warning**
-Docker has been changed rapidly. Please do not try to run the project on versions below the verified vesions. In particular, some scripts depend on Docker Compose v1.15.0. For the same reason, please verify the scripts if you run them on a future version to avoid any surprise.
+Docker has been changing rapidly. Please do not try to run the project on versions below the verified vesions. In particular, some scripts depend on Docker Compose v1.15.0. For the same reason, please verify the scripts if you run them on a future version to avoid any surprise.
 
 # Preparation of Machine(s)
 The Docker application can run across multiple machines but you can start with one Linux machine and then extend it later. 
@@ -193,4 +205,16 @@ Now you can deploy the application to the cluster by `./deploy_cluster.sh`. It w
 1. Run `docker ps` on all the nodes to find out how many instances of each component has been deployed.
 1. Run `docker ps` on the node marked with `web2py.tier.db=true` to ensure web2py_mysql5 is running there. 
 
-## Outstanding issues
+## Networking in Docker Swarm
+If you try to access any published port outside of Docker container (e.g. port 5000 of private registry), you can just access any Docker node with the port number. In fact, you can look the script `./registry/list_images_in_registry.sh` to see that it talks to local machine's name at port 5000 and it doesn't matter which node you run the script as long as it is a swarm node. 
+
+If you try to access a service (e.g. web2py_python27) from another container (e.g. webpy_apache2), then you just need to call the service name as if it is a host name and Docker swarm will round robin the request to one instance of the service. Perhaps explaining a bit of details will help. There are 3 services in the docker application defined in docker_compose_cluster.yml:
+1. web2py_apache2
+1. web2py_python27
+1. web2py_mysql5
+
+Let's say both web2py_apache2 and web2py_python27 have 3 replicas to have 6 containers altogether at runtime. Docker swarm will create 6 different IP addresses for these 6 containers. On top of that, there is a service level virtual ip for each service. If you go into any container by `docker exec -it <container ID> /bin/bash`, you can run nslookup to find a service's virtual ip by `nslookup web2py_apache2`, `nslookup web2py_python27` or `nslookup web2py_mysql5`. The default behaviour is each nslookup call will return exactly one IP address which the VIP of the service. If you try to have integration between services (e.g. Apache routing to python application tier), you should use web2py_python27 inside web2py_apache2 and let swarm handles round-robin. 
+
+If you try to access a specific container, then you will need to find out its IP address by command `docker network inspect web2py_default` (web2py_default is an overlay network created by docker stack automatically).
+
+This is the default behaviour of end point mode "vip". Alternatively, you may want to do your own load balancing and want to access IP address of individual containers regardless of where they are. In this case, you may switch to end point mode of "dnsrr". Please look at Docker networking documentation [here](https://docs.docker.com/compose/compose-file/#endpoint_mode) for more details. 
