@@ -1,7 +1,7 @@
 version: '3'
 services:
   apache2:
-    image: ubuntu-docker01:5000/web2py_apache2
+    image: ${REGISTRY_HOSTNAME}:${REGISTRY_PUBLISHED_PORT}/web2py_apache2
     deploy:
       replicas: 3
 # placeholder - future extension to constraint web tier, if needed
@@ -14,7 +14,7 @@ services:
       - ${APACHE2_CONF_DIR}:/usr/local/apache2/conf
       - ${APACHE2_HTDOCS_DIR}:/usr/local/apache2/htdocs
   python27:
-    image: ubuntu-docker01:5000/web2py_python27
+    image: ${REGISTRY_HOSTNAME}:${REGISTRY_PUBLISHED_PORT}/web2py_python27
     deploy:
       replicas: 3
 # placeholder - future extension to contraint app tier, if needed
@@ -24,7 +24,7 @@ services:
     ports:
       - "8080:80"
   mysql5:
-    image: ubuntu-docker01:5000/web2py_mysql5
+    image: ${REGISTRY_HOSTNAME}:${REGISTRY_PUBLISHED_POST}/web2py_mysql5
     deploy:
       placement:
         constraints:

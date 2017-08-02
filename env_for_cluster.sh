@@ -3,7 +3,7 @@
 #
 # registry 
 export REGISTRY_NAME=registry
-export REGISTRY_HOSTNAME=ubuntu-docker01
+export REGISTRY_HOSTNAME=`hostname`
 export REGISTRY_PUBLISHED_PORT=5000
 export REGISTRY_CONTAINER_PORT=5000
 
