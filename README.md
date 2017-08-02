@@ -117,19 +117,50 @@ Now you have deployed the application successfully. If you are new to Docker, I 
 # Deploy to multi-node SWARM cluster
 
 When you scale from a single node to a multi-node swarm cluster, you will need to deal with at least 2 new challenges:
-**How to distribute images on each node**
+
+**1. How to distribute images on each node**
+
 All the nodes need to access to the same set of images. When you run a single-node cluster, all the images are cached locally and the command `docker image ls` shows all the locally cached images. Running docker across nodes will require a registry such that every node can resolve to the same image easily. If your team has standardised on a public or private registry, then you can stick with that one. Otherwise, you will have 2 choices:
 * public registry such as hub.docker.com - your machine needs to have very good upload speed to Internet because images are hundreds of MBs.
 * private registry - you can build a private registry quickly for testing. When changes to images are stablised, you can switch to a public registry because trying to provide resilency of a registry is not a trivial task. 
 
 In this document, I will cover how to deploy a private registry for testing the deployment quickly. 
 
-**Where to deploy each component**
-Some containers may need to access external resources where it is not appropriate to copy into the images. E.g. MySQL needs to have a persistent storage and it's not available on every node, all Apache containers need to access the same content directory and the directory may be changed dynamically. Hence you want to have the flexibility of deploying specific types of containers to certain nodes only. This project uses Docker compose constraint to work with Docker node label such as MySQL is only deployed to a node capable of supporting database directory. Specifically, the MySQL container is only deployed to a node with label "web2py.tier.db=true".
+**2. Where to deploy each component**
+
+Some containers may need to access external resources where it is not appropriate to copy into the images. E.g. MySQL needs to have a persistent storage and it's not available on every node, all Apache containers need to access the same content directory and the directory may be changed dynamically. Hence you want to have the flexibility of deploying specific types of containers to certain nodes only. This project uses Docker compose constraint to work with Docker node label such as MySQL is only deployed to a node capable of supporting database directory. Specifically, the MySQL container is only deployed to a node with label "web2py.tier.db=true". You can extend the concept to other tiers such as having "web2py.tier.web=true" for Apache http server and "web2py.tier.app=true" for Python containers.
+
+## Topology
+The project assumes there are multiple nodes and one of them is designated as a "master" node for deploying services. Let's assume there are 3 nodes called "docker01", "docker02" and "docker03" respectively where "docker01" is the "master" node where you have tried the single node deployment. I will refer to "docker01" in the rest of the section even though none of the scripts has hard-coded any hostname inside.  
 
 ## Deploy a private registry
+1. go to top of project directory on "docker01" and then go to subdirectory `./registry`
+2. run `./deploy_private_registry.sh`
+It will deploy a v2 registry from official library at hub.docker.com. You can check the deployment by `docker service ls` to see 
+
+ID                  NAME                MODE                REPLICAS            IMAGE                                         PORTS
+
+9kky12ihlxk8        registry            replicated          1/1                 registry:2                                    *:5000->5000/tcp
+
+
+3. run `./push_private_images.sh` to publish images to private registry
+4. check if publish is successful by the command `./list_images_in_registry.sh`. It should print this single line on what images are stored in the private registry:
+`{"repositories":["web2py_apache2","web2py_mysql5","web2py_python27"]}`
+
+Now the registry is ready and you will prepare other nodes to join the swarm cluster.
 
 ## Add new Docker node to Swarm cluster
+First go to "docker01" and run `docker swarm join-token worker` to print a command for joining new nodes. Make a copy of the whole line of `docker swarm join` command.
+
+For every new node to join the swarm of "docker01":
+1. git clone this repository `git clone https://github.com/eddieho/docker-web2py.git`
+1. install Docker and Docker Compose. Please go back to an earlier section "**Installation of Docker**" for instructions.
+1. run the command `docker swarm join --token SWMTKN-1-....` obtained from "docker01".
+1. go to "docker01" and run `docker node ls` to see if the joining node is visible to swarm manager on "docker01".
+
+By the end of the process, running `docker node ls` should show all the nodes just joined plus the master "docker01".
+
+## Prepare Test Environment
 
 # Misc notes
 
