@@ -1,4 +1,4 @@
-# docker-web2py
+# Overview of docker-web2py
 Purpose of this project is to build a set of Docker artefacts to support an application with these components:
 1. web tier - Apache web server v2.4.x 
 1. application tier - a Python 2.7 based framework from http://web2py.com/ 
@@ -85,26 +85,26 @@ Now let's deploy the application to this newly created Swarm cluster.
 1. `./deploy_web2py_1node.sh` 
 You will see output like:
 
-Creating network web2py_default
+`Creating network web2py_default
 
 Creating service web2py_mysql5
 
 Creating service web2py_apache2
 
-Creating service web2py_python27
+Creating service web2py_python27`
 
 You can check the deploy by 
 `docker service ls`
 
 Here is a sample output:
 
-ID                  NAME                MODE                REPLICAS            IMAGE                    PORTS
+`ID                  NAME                MODE                REPLICAS            IMAGE                    PORTS
 
 60uag112d5dh        web2py_apache2      replicated          2/2                 web2py_apache2:latest    *:80->8080/tcp
 
 elqmr6mrhxe4        web2py_python27     replicated          2/2                 web2py_python27:latest   *:8080->80/tcp
 
-xnfhp6e0a7pw        web2py_mysql5       replicated          1/1                 web2py_mysql5:latest     *:3306->3306/tcp
+xnfhp6e0a7pw        web2py_mysql5       replicated          1/1                 web2py_mysql5:latest     *:3306->3306/tcp`
 
 When the deployment of image is completed, you will see the 2 numbers in column REPLICAS the same. You can check the status by re-running command `docker service ls` repeatedly.
 
@@ -138,9 +138,9 @@ The project assumes there are multiple nodes and one of them is designated as a 
 2. run `./deploy_private_registry.sh`
 It will deploy a v2 registry from official library at hub.docker.com. You can check the deployment by `docker service ls` to see 
 
-ID                  NAME                MODE                REPLICAS            IMAGE                                         PORTS
+`ID                  NAME                MODE                REPLICAS            IMAGE                                         PORTS
 
-9kky12ihlxk8        registry            replicated          1/1                 registry:2                                    *:5000->5000/tcp
+9kky12ihlxk8        registry            replicated          1/1                 registry:2                                    *:5000->5000/tcp`
 
 
 3. run `./push_private_images.sh` to publish images to private registry
@@ -148,6 +148,8 @@ ID                  NAME                MODE                REPLICAS            
 `{"repositories":["web2py_apache2","web2py_mysql5","web2py_python27"]}`
 
 Now the registry is ready and you will prepare other nodes to join the swarm cluster.
+
+**Note:** - the registry does not have a persistent directory configured. As a result, restarting "docker01" will lose all images but you can just run the script `push_private_images.sh` again to re-populate the registry.
 
 ## Add new Docker node to Swarm cluster
 First go to "docker01" and run `docker swarm join-token worker` to print a command for joining new nodes. Make a copy of the whole line of `docker swarm join` command.
@@ -161,22 +163,34 @@ For every new node to join the swarm of "docker01":
 By the end of the process, running `docker node ls` should show all the nodes just joined plus the master "docker01".
 
 ## Prepare Test Environment
+1. If you are using a private registry, then please run the following script in every single node including "docker01":
 
-# Misc notes
+`./tests/allow_insecure_registries.sh`
 
-**Latest Status**
-* A single docker compose has been created to run 3 containers of Apache v2.4.x, Python v2.7.x and MySQL v5.7.x
-* MySQL
-  * configuration directory and data directory have been externalised
-  * database initialisation script is supported (i.e. only runs when database does not exist) and can be further customised 
-* Apache
-  * config and document directories have been externalised
-  * does not have SSL support
-* web2py has not been installed but pymysql on python 2.7 has been verified to connect into MySQL in container successfully.
-* All three containers can talk to each other. 
-* Docker CE and Compose installation scripts have been verified in new Ubutun 16.x vm's. 
-* deployment to a single node warm works by using Docker Stack and a private registry https://docs.docker.com/engine/swarm/stack-deploy/#push-the-generated-image-to-the-registry. It's possible to use Docker hub for distribution of images but upload bandwidth is a big issue. Hence a private registry is deployed for testing. 
-* deployed to 3-node cluster successfully with support of constraining MySQL container to selected nodes using a node label web2py.tier.db=true
+By default, registry client has to connect via SSL. For test purpose but never in production, you can allow plain text communication. 
 
-**Next Steps**
-* update this README.cmd
+2. Mark only one node to run MySQL. Choose one node you want and run the script `./node/tag_node_db.sh` such that it marks the Docker node with a label 'web2py.tier.db=true'. If you have provisioned access to the same directory on a storage (e.g. NFS mount), then you may mark all those nodes with 'web2py.tier.db=true' and Docker stack will pick one of them to run. Remember this verison of the project only supports one container of MySQL for the whole application.
+
+3. Prepare directory mappings - If you inspect the file env_for_cluster.sh, you will see directory mappings such as:
+
+export MYSQL_CONF_DIR=$HOME/web2py/mysql5/mysql_cnf/mysql.conf.d
+
+export MYSQL_DATA_DIR=$HOME/web2py/mysql5/datadir
+
+export MYSQL_INIT_DIR=$HOME/web2py/mysql5/init
+
+They are referenced in docker stack file `docker_compose_cluster.yml`. If you just want to do a quick sanity test of deployment, you may run the script `./tests/set_test_links.sh` on every single node in the cluster including "docker01". Otherwise, please edit the file env_for_cluster.sh to ensure all variables ending with "_DIR" are pointing to an appropriate directory.
+
+## Deploy application to cluster
+Here is a recap and checklist of what you have done to prepare for cluster deployment:
+1. all nodes have been registered as shown by the command `docker node ls` running on "docker01".
+1. all nodes can access the registry for images. If you are using a private registry, you can test it with `./registry/list_images_in_registry.sh`
+1. one and only one node has been marked with a label `web2py.tier.db=true` by the script `./node/tag_node_db.sh`.
+1. directory mappings have been configured whether it is by the sample script `./test/set_test_links.sh` or you have manually edited the file env_for_cluster.sh
+
+Now you can deploy the application to the cluster by `./deploy_cluster.sh`. It will take some time to complete the deployment even if there is no error. You can check the deployment by:
+1. Run `docker service ls` on a manager node (i.e. "docker01") to find out all replicas have been deployed. i.e. the values under 'REPLICAS' has N/N instead of 0/N, 1/N, etc.
+1. Run `docker ps` on all the nodes to find out how many instances of each component has been deployed.
+1. Run `docker ps` on the node marked with `web2py.tier.db=true` to ensure web2py_mysql5 is running there. 
+
+## Outstanding issues
