@@ -41,10 +41,21 @@ Alternatively, you can use the scripts in this project to prepare your first mac
 1. `./install_docker_ce_and_compose.sh`
 1. Verify the installation by checking the versions installed 
 `docker --version` 
-> Docker version 17.06.0-ce, build 02c1d87  # sample output
+
+> Docker version 17.06.0-ce, build 02c1d87  
+# sample output
 `docker-compose --version` 
+
 > docker-compose version 1.15.0, build e12f3b9
-1. Run `post_install_docker.sh` to configure your linux user to be in the 'docker' group. Then logout and login again to refresh the user's group membership. 
+5. Run `post_install_docker.sh` to configure your linux user to be in the 'docker' group. Then logout and login again to refresh the user's group membership. 
+6. The default deployment scripts rely on variable substitution in yml files docker_compose_1node.yml and docker_compose_cluster.yml. This feature requires `sudo -E` to work properly. You can test if this feature is supposed by your Linux by: 
+
+`export ABC=123`
+
+`sudo -E /bin/bash -c 'echo $ABC'`
+to see if the output is 123. If not, you have 2 options:
+a. Use env_keep as suggested at https://superuser.com/questions/232231/how-do-i-make-sudo-preserve-my-environment-variables 
+b. Manually edit .yml files to remove variable substitutions and replace with actual directory names.
 
 # New to Docker
 If you are new to Docker, I suggest you follow these Docker tutorials before running this project:
@@ -86,11 +97,13 @@ When these images are ready, you can work on deploying to a single-node Docker S
 # Deploy to single node SWARM cluster
 First step is to create a Docker Swarm by
 `docker swarm init`
-You will see an output like 
+You will see an output like
+
 `Swarm initialized: ...
+
   docker swarm join --token SWMTKN-1-xxxx 192.168.xxx.yyy:2377`
  
-The 'docker swarm join' will be used when new nodes are added to the cluster in a following section. 
+The `docker swarm join` command will be used when new nodes are added to the cluster in a following section. 
  
 Now let's deploy the application to this newly created Swarm cluster.
 1. Go to top of the project directory
