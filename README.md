@@ -40,11 +40,11 @@ Alternatively, you can use the scripts in this project to prepare your first mac
 1. `cd install`
 1. `./install_docker_ce_and_compose.sh`
 1. Verify the installation by checking the versions installed 
-`docker --version` 
+`sudo docker --version` 
 
 > Docker version 17.06.0-ce, build 02c1d87  
 # sample output
-`docker-compose --version` 
+`sudo docker-compose --version` 
 
 > docker-compose version 1.15.0, build e12f3b9
 5. Run `post_install_docker.sh` to configure your linux user to be in the 'docker' group. Then logout and login again to refresh the user's group membership. 
@@ -78,10 +78,10 @@ The project has the following dependencies to base images:
 (*) - web2py is an application deployed to the Python environment.
 
 You can build these images by the command
-`docker-compose -f docker-compose-1node.yml build`
+`sudo docker-compose -f docker-compose-1node.yml build`
 
 Once it is done, verify the image built by 
-`docker image ls`
+`sudo docker image ls`
 you should be able to see something similar to: 
 
 REPOSITORY          TAG                 IMAGE ID            CREATED              SIZE
@@ -96,14 +96,14 @@ When these images are ready, you can work on deploying to a single-node Docker S
 
 # Deploy to single node SWARM cluster
 First step is to create a Docker Swarm by
-`docker swarm init`
+`sudo docker swarm init`
 You will see an output like
 
 `Swarm initialized: ...
 
   docker swarm join --token SWMTKN-1-xxxx 192.168.xxx.yyy:2377`
  
-The `docker swarm join` command will be used when new nodes are added to the cluster in a following section. 
+The `sudo docker swarm join` command will be used when new nodes are added to the cluster in a following section. 
  
 Now let's deploy the application to this newly created Swarm cluster.
 1. Go to top of the project directory
@@ -119,7 +119,7 @@ Creating service web2py_apache2
 Creating service web2py_python27`
 
 You can check the deploy by 
-`docker service ls`
+`sudo docker service ls`
 
 Here is a sample output:
 
@@ -131,10 +131,10 @@ elqmr6mrhxe4        web2py_python27     replicated          2/2                 
 
 xnfhp6e0a7pw        web2py_mysql5       replicated          1/1                 web2py_mysql5:latest     *:3306->3306/tcp`
 
-When the deployment of image is completed, you will see the 2 numbers in column REPLICAS the same. You can check the status by re-running command `docker service ls` repeatedly.
+When the deployment of image is completed, you will see the 2 numbers in column REPLICAS the same. You can check the status by re-running command `sudo docker service ls` repeatedly.
 
 If you want to access the command line of any docker container, you just need to get its ID and then run:
-`docker exec -it 60uag112d5dh /bin/bash` 
+`sudo docker exec -it 60uag112d5dh /bin/bash` 
 60uag112d5dh is the ID of the container for web2py_apache2 in the sample output.
 
 Now you have deployed the application successfully. If you are new to Docker, I suggest you to familiar yourself with the docker application before taking up the challenge of deploying into a multi-node swarm cluster. You may apply most of the concepts to a multi-node cluster but you will also deal with new challenges. 
@@ -145,7 +145,7 @@ When you scale from a single node to a multi-node swarm cluster, you will need t
 
 **1. How to distribute images on each node**
 
-All the nodes need to access to the same set of images. When you run a single-node cluster, all the images are cached locally and the command `docker image ls` shows all the locally cached images. Running docker across nodes will require a registry such that every node can resolve to the same image easily. If your team has standardised on a public or private registry, then you can stick with that one. Otherwise, you will have 2 choices:
+All the nodes need to access to the same set of images. When you run a single-node cluster, all the images are cached locally and the command `sudo docker image ls` shows all the locally cached images. Running docker across nodes will require a registry such that every node can resolve to the same image easily. If your team has standardised on a public or private registry, then you can stick with that one. Otherwise, you will have 2 choices:
 * public registry such as hub.docker.com - your machine needs to have very good upload speed to Internet because images are hundreds of MBs.
 * private registry - you can build a private registry quickly for testing. When changes to images are stablised, you can switch to a public registry because trying to provide resilency of a registry is not a trivial task. 
 
@@ -161,7 +161,7 @@ The project assumes there are multiple nodes and one of them is designated as a 
 ## Deploy a private registry
 1. go to top of project directory on "docker01" and then go to subdirectory `./registry`
 2. run `./deploy_private_registry.sh`
-It will deploy a v2 registry from official library at hub.docker.com. You can check the deployment by `docker service ls` to see 
+It will deploy a v2 registry from official library at hub.docker.com. You can check the deployment by `sudo docker service ls` to see 
 
 `ID                  NAME                MODE                REPLICAS            IMAGE                                         PORTS
 
@@ -177,15 +177,15 @@ Now the registry is ready and you will prepare other nodes to join the swarm clu
 **Note:** - the registry does not have a persistent directory configured. As a result, restarting "docker01" will lose all images but you can just run the script `push_private_images.sh` again to re-populate the registry.
 
 ## Add new Docker node to Swarm cluster
-First go to "docker01" and run `docker swarm join-token worker` to print a command for joining new nodes. Make a copy of the whole line of `docker swarm join` command.
+First go to "docker01" and run `sudo docker swarm join-token worker` to print a command for joining new nodes. Make a copy of the whole line of `sudo docker swarm join` command.
 
 For every new node to join the swarm of "docker01":
 1. git clone this repository `git clone https://github.com/eddieho/docker-web2py.git`
 1. install Docker and Docker Compose. Please go back to an earlier section "**Installation of Docker**" for instructions.
-1. run the command `docker swarm join --token SWMTKN-1-....` obtained from "docker01".
-1. go to "docker01" and run `docker node ls` to see if the joining node is visible to swarm manager on "docker01".
+1. run the command `sudo docker swarm join --token SWMTKN-1-....` obtained from "docker01".
+1. go to "docker01" and run `sudo docker node ls` to see if the joining node is visible to swarm manager on "docker01".
 
-By the end of the process, running `docker node ls` should show all the nodes just joined plus the master "docker01".
+By the end of the process, running `sudo docker node ls` should show all the nodes just joined plus the master "docker01".
 
 ## Prepare Test Environment
 1. If you are using a private registry, then please run the following script in every single node including "docker01":
@@ -208,15 +208,15 @@ They are referenced in docker stack file `docker_compose_cluster.yml`. If you ju
 
 ## Deploy application to cluster
 Here is a recap and checklist of what you have done to prepare for cluster deployment:
-1. all nodes have been registered as shown by the command `docker node ls` running on "docker01".
+1. all nodes have been registered as shown by the command `sudo docker node ls` running on "docker01".
 1. all nodes can access the registry for images. If you are using a private registry, you can test it with `./registry/list_images_in_registry.sh`
 1. one and only one node has been marked with a label `web2py.tier.db=true` by the script `./node/tag_node_db.sh`.
 1. directory mappings have been configured whether it is by the sample script `./test/set_test_links.sh` or you have manually edited the file env_for_cluster.sh
 
 Now you can deploy the application to the cluster by `./deploy_cluster.sh`. It will take some time to complete the deployment even if there is no error. You can check the deployment by:
-1. Run `docker service ls` on a manager node (i.e. "docker01") to find out all replicas have been deployed. i.e. the values under 'REPLICAS' has N/N instead of 0/N, 1/N, etc.
-1. Run `docker ps` on all the nodes to find out how many instances of each component has been deployed.
-1. Run `docker ps` on the node marked with `web2py.tier.db=true` to ensure web2py_mysql5 is running there. 
+1. Run `sudo docker service ls` on a manager node (i.e. "docker01") to find out all replicas have been deployed. i.e. the values under 'REPLICAS' has N/N instead of 0/N, 1/N, etc.
+1. Run `sudo docker ps` on all the nodes to find out how many instances of each component has been deployed.
+1. Run `sudo docker ps` on the node marked with `web2py.tier.db=true` to ensure web2py_mysql5 is running there. 
 
 ## Networking in Docker Swarm
 If you try to access any published port outside of Docker container (e.g. port 5000 of private registry), you can just access any Docker node with the port number. In fact, you can look the script `./registry/list_images_in_registry.sh` to see that it talks to local machine's name at port 5000 and it doesn't matter which node you run the script as long as it is a swarm node. 
@@ -226,8 +226,8 @@ If you try to access a service (e.g. web2py_python27) from another container (e.
 1. web2py_python27
 1. web2py_mysql5
 
-Let's say both web2py_apache2 and web2py_python27 have 3 replicas to have 6 containers altogether at runtime. Docker swarm will create 6 different IP addresses for these 6 containers. On top of that, there is a service level virtual ip for each service. If you go into any container by `docker exec -it <container ID> /bin/bash`, you can run nslookup to find a service's virtual ip by `nslookup web2py_apache2`, `nslookup web2py_python27` or `nslookup web2py_mysql5`. The default behaviour is each nslookup call will return exactly one IP address which the VIP of the service. If you try to have integration between services (e.g. Apache routing to python application tier), you should use web2py_python27 inside web2py_apache2 and let swarm handles round-robin. 
+Let's say both web2py_apache2 and web2py_python27 have 3 replicas to have 6 containers altogether at runtime. Docker swarm will create 6 different IP addresses for these 6 containers. On top of that, there is a service level virtual ip for each service. If you go into any container by `sudo docker exec -it <container ID> /bin/bash`, you can run nslookup to find a service's virtual ip by `nslookup web2py_apache2`, `nslookup web2py_python27` or `nslookup web2py_mysql5`. The default behaviour is each nslookup call will return exactly one IP address which the VIP of the service. If you try to have integration between services (e.g. Apache routing to python application tier), you should use web2py_python27 inside web2py_apache2 and let swarm handles round-robin. 
 
-If you try to access a specific container, then you will need to find out its IP address by command `docker network inspect web2py_default` (web2py_default is an overlay network created by docker stack automatically).
+If you try to access a specific container, then you will need to find out its IP address by command `sudo docker network inspect web2py_default` (web2py_default is an overlay network created by docker stack automatically).
 
 This is the default behaviour of end point mode "vip". Alternatively, you may want to do your own load balancing and want to access IP address of individual containers regardless of where they are. In this case, you may switch to end point mode of "dnsrr". Please look at Docker networking documentation [here](https://docs.docker.com/compose/compose-file/#endpoint_mode) for more details. 
